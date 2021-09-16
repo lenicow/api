@@ -1,5 +1,7 @@
 const router = require("express").Router();
 const User = require("../models/User");
+const Order = require("../models/Order");
+const Event = require("../models/Event")
 const CryptoJS = require("crypto-js");
 const verify = require("../verifyToken")
 
@@ -56,6 +58,28 @@ router.get("/", verify, async (req,res) =>{
     }
   } else {
     res.status(403).json("Vous n'êtes pas autorisé à voir tous les utilisateurs")
+  }
+})
+
+router.post("/participate", verify, async (req,res) => {
+  const eventId = req.body.eventId;
+  const userId = req.user.id
+  const infos = new Order({
+    eventId, userId
+  })
+  const ifExist = await Order.find({eventId:eventId,userId:userId})
+  if(ifExist.length <= 0){
+    try{
+      const participate = await infos.save()
+      const inventory = await Event.findById(eventId)
+      inventory.inventory -= 1
+      await inventory.save();
+      res.status(201).json(participate)
+    }catch(err){
+      res.status(500).json(err)
+    }
+  } else {
+    return res.status(400).json("Vous participez déjà à cet évènement")
   }
 })
 
