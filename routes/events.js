@@ -11,10 +11,13 @@ router.post("/", verify, async (req,res) =>{
       const createdEvent = await newEvent.save();
       res.status(201).json(createdEvent)
     }catch(err){
+      if(err.code === 11000){
+        return res.status(400).json("Le nom d'évènement existe déjà")
+      }
       res.status(500).json(err)
     }
   } else {
-    res.status(403).json("Error")
+    res.status(403).json("Vous n'êtes pas un organisateur")
   }
 })
 
@@ -33,6 +36,9 @@ router.put("/:id", verify, async (req,res) =>{
       });
       res.status(201).json(updatedEvent)
     }catch(err){
+      if(err.code === 11000){
+        return res.status(400).json("Le nom d'évènement existe déjà")
+      }
       res.status(500).json(err)
     }
   } else {

@@ -4,19 +4,27 @@ const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken")
 
 router.post("/register", async (req,res) =>{
-  const newUser = new User ({
-    username: req.body.username,
-    email: req.body.email,
-    password: CryptoJS.AES.encrypt(req.body.password, process.env.SECRET_KEY).toString(),
-    
-  })
-
-  try{
-    const user = await newUser.save();
-    res.status(201).json(user)
-  }catch(err){
-    res.status(500).json(err);
+  if(req.body.role === "user" || req.body.role === "organisateur"){
+    const newUser = new User ({
+      username: req.body.username,
+      email: req.body.email,
+      role: req.body.role,
+      password: CryptoJS.AES.encrypt(req.body.password, process.env.SECRET_KEY).toString(),
+      
+    })
+    try{
+      const user = await newUser.save();
+      res.status(201).json(user)
+    }catch(err){
+      if(err.code === 11000){
+        return res.status(500).json("Le nom d'utilisateur ou l'email existe déjà")
+      }
+      res.status(500).json(err);
+    }
+  } else {
+    res.status(403).json("Vous n'êtes pas autorisé à être admin")
   }
+
 })
 
 router.post("/login", async (req,res)=>{
